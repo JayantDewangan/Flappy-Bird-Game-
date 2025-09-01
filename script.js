@@ -19,8 +19,8 @@ const birdProps = {
     x: 100,
     y: 150,
     radius: 15,
-    gravity: 0.35,
-    lift: -6,
+    gravity: 0.2,
+    lift: -4,
     velocity: 0,
     rotation: 0
 };
@@ -384,4 +384,5 @@ gameContainer.addEventListener('click', () => {
 resizeCanvas();
 init();
 gameLoop();
+
 
