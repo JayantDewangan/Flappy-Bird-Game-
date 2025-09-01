@@ -18,8 +18,8 @@ const birdProps = {
     x: 100,
     y: 150,
     radius: 15,
-    gravity: 0.6, // Increased again for a faster fall
-    lift: -10,    // Increased again for a stronger flap
+    gravity: 0.5, // Reduced for slower falling
+    lift: -8,     // Reduced for a less intense flap
     velocity: 0,
     rotation: 0
 };
@@ -28,7 +28,7 @@ const pipeProps = {
     width: 60,
     gap: 160,
     spawnDistance: 300, 
-    speed: 3.5 // Increased base speed again
+    speed: 3 // Reduced base speed
 };
 
 // --- Game Setup ---
@@ -36,7 +36,8 @@ function resizeCanvas() {
     const containerRect = gameContainer.getBoundingClientRect();
     canvas.width = containerRect.width;
     canvas.height = containerRect.height;
-    scaleFactor = canvas.height / 600; 
+    // FIX: Use the square root to make scaling less aggressive on tall screens
+    scaleFactor = Math.sqrt(canvas.height / 600); 
 }
 
 function init() {
@@ -45,8 +46,8 @@ function init() {
         x: 100 * scaleFactor,
         y: 150 * scaleFactor,
         radius: 15 * scaleFactor,
-        gravity: 0.5 * scaleFactor, // Apply scale
-        lift: -9 * scaleFactor,       // Apply scale
+        gravity: birdProps.gravity * scaleFactor, // FIX: Use the value from birdProps
+        lift: birdProps.lift * scaleFactor,       // FIX: Use the value from birdProps
         velocity: 0
     };
     pipes = [];
@@ -340,5 +341,8 @@ gameContainer.addEventListener('click', () => {
 resizeCanvas();
 init();
 gameLoop();
+
+
+
 
 
