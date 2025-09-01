@@ -13,13 +13,14 @@ const highScoreText = document.getElementById('highScoreText');
 
 let bird, pipes, score, level, gameSpeed, gameState, clouds;
 let scaleFactor;
+let audioCtx; // For sound effects
 
 const birdProps = {
     x: 100,
     y: 150,
     radius: 15,
-    gravity: 0.5, // Reduced for slower falling
-    lift: -8,     // Reduced for a less intense flap
+    gravity: 0.5,
+    lift: -8,
     velocity: 0,
     rotation: 0
 };
@@ -27,17 +28,59 @@ const birdProps = {
 const pipeProps = {
     width: 60,
     gap: 160,
-    spawnDistance: 300, 
-    speed: 3 // Reduced base speed
+    spawnDistance: 300,
+    speed: 3
 };
+
+// --- Audio ---
+function initAudio() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+}
+
+function playSound(type) {
+    if (!audioCtx) return;
+
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    gainNode.connect(audioCtx.destination);
+    oscillator.connect(gainNode);
+    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+
+    switch (type) {
+        case 'flap':
+            oscillator.frequency.setValueAtTime(300, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.2);
+            oscillator.type = 'triangle';
+            break;
+        case 'score':
+            oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.1);
+            oscillator.type = 'sine';
+            break;
+        case 'gameOver':
+            oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
+            oscillator.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.3);
+            gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.3);
+            oscillator.type = 'sawtooth';
+            break;
+    }
+
+    oscillator.start(audioCtx.currentTime);
+    oscillator.stop(audioCtx.currentTime + 0.3);
+}
+
 
 // --- Game Setup ---
 function resizeCanvas() {
     const containerRect = gameContainer.getBoundingClientRect();
     canvas.width = containerRect.width;
     canvas.height = containerRect.height;
-    // FIX: Use the square root to make scaling less aggressive on tall screens
-    scaleFactor = Math.sqrt(canvas.height / 600); 
+    scaleFactor = Math.sqrt(canvas.height / 600);
 }
 
 function init() {
@@ -46,8 +89,8 @@ function init() {
         x: 100 * scaleFactor,
         y: 150 * scaleFactor,
         radius: 15 * scaleFactor,
-        gravity: birdProps.gravity * scaleFactor, // FIX: Use the value from birdProps
-        lift: birdProps.lift * scaleFactor,       // FIX: Use the value from birdProps
+        gravity: birdProps.gravity,   // constant (not scaled)
+        lift: birdProps.lift,         // constant (not scaled)
         velocity: 0
     };
     pipes = [];
@@ -56,13 +99,10 @@ function init() {
     level = 1;
     gameSpeed = pipeProps.speed;
     updateUI();
-    
-    // Add initial clouds
+
     for (let i = 0; i < 5; i++) {
         clouds.push(createCloud(true));
     }
-    
-    // Add initial pipe
     pipes.push(createPipe(canvas.width));
 }
 
@@ -75,20 +115,17 @@ function gameLoop() {
 // --- Game Logic ---
 function update() {
     updateClouds();
-    
     if (gameState !== 'playing') return;
 
-    // Bird physics
     bird.velocity += bird.gravity;
     bird.y += bird.velocity;
-    
+
     if (bird.velocity < 0) {
-         bird.rotation = -0.3;
+        bird.rotation = -0.3;
     } else if (bird.velocity > 1) {
-         bird.rotation = Math.min(bird.velocity * 0.1, 0.7);
+        bird.rotation = Math.min(bird.velocity * 0.1, 0.7);
     }
 
-    // Pipe management
     for (let i = pipes.length - 1; i >= 0; i--) {
         pipes[i].x -= gameSpeed * scaleFactor;
 
@@ -100,6 +137,7 @@ function update() {
         if (!pipes[i].passed && pipes[i].x < bird.x - bird.radius) {
             pipes[i].passed = true;
             score++;
+            playSound('score'); // Sound on score
             updateScore();
         }
 
@@ -108,13 +146,11 @@ function update() {
         }
     }
 
-    // Spawn new pipes
     const lastPipe = pipes[pipes.length - 1];
     if (!lastPipe || canvas.width - lastPipe.x >= pipeProps.spawnDistance * scaleFactor) {
         pipes.push(createPipe(canvas.width));
     }
 
-    // Ground and ceiling collision
     if (bird.y + bird.radius > canvas.height || bird.y - bird.radius < 0) {
         gameOver();
     }
@@ -122,13 +158,14 @@ function update() {
 
 function flap() {
     if (gameState === 'playing') {
-       bird.velocity = bird.lift;
+        bird.velocity = bird.lift;
+        playSound('flap'); // Sound on flap
     }
 }
 
 function createPipe(xPos) {
-     const gap = getGapForLevel();
-     const topPipeHeight = Math.random() * (canvas.height - gap - 100 * scaleFactor) + 50 * scaleFactor;
+    const gap = getGapForLevel();
+    const topPipeHeight = Math.random() * (canvas.height - gap - 100 * scaleFactor) + 50 * scaleFactor;
 
     return {
         x: xPos,
@@ -136,7 +173,7 @@ function createPipe(xPos) {
         bottom: topPipeHeight + gap,
         width: pipeProps.width * scaleFactor,
         passed: false,
-        moving: level >= 2 && Math.random() < 0.3, 
+        moving: level >= 2 && Math.random() < 0.3,
         moveSpeed: (Math.random() - 0.5) * 2 * scaleFactor,
     };
 }
@@ -183,6 +220,9 @@ function startGame() {
 }
 
 function gameOver() {
+    if (gameState === 'playing') { // Prevent sound from playing multiple times
+        playSound('gameOver'); // Sound on game over
+    }
     gameState = 'gameOver';
     gameOverScreen.style.display = 'flex';
     const highScore = localStorage.getItem('flappyHighScore') || 0;
@@ -190,7 +230,7 @@ function gameOver() {
         localStorage.setItem('flappyHighScore', score);
         highScoreText.textContent = `New High Score!`;
     } else {
-         highScoreText.textContent = `High Score: ${highScore}`;
+        highScoreText.textContent = `High Score: ${highScore}`;
     }
     finalScoreDisplay.textContent = `Score: ${score}`;
 }
@@ -297,7 +337,7 @@ function drawPipe(pipe) {
     ctx.fillRect(pipe.x, 0, pipe.width, pipe.top);
     ctx.fillStyle = pipeHeadColor;
     ctx.fillRect(pipe.x - 5 * scaleFactor, pipe.top - pipeHeadHeight, pipe.width + 10 * scaleFactor, pipeHeadHeight);
-    
+
     ctx.fillStyle = pipeColor;
     ctx.fillRect(pipe.x, pipe.bottom, pipe.width, canvas.height - pipe.bottom);
     ctx.fillStyle = pipeHeadColor;
@@ -306,24 +346,27 @@ function drawPipe(pipe) {
 
 // --- Event Listeners ---
 window.addEventListener('resize', () => {
-     resizeCanvas();
-     init(); 
+    resizeCanvas();
+    init();
 });
 
 startButton.addEventListener('click', (e) => {
     e.stopPropagation();
+    initAudio(); // Initialize audio on user interaction
     startGame();
 });
 
 restartButton.addEventListener('click', (e) => {
-     e.stopPropagation();
-     startGame();
+    e.stopPropagation();
+    initAudio(); // Initialize audio on user interaction
+    startGame();
 });
 
 window.addEventListener('keydown', (e) => {
     if (e.code === 'Space') {
-        e.preventDefault(); // Prevents page from scrolling
+        e.preventDefault();
         if (gameState === 'start' || gameState === 'gameOver') {
+            initAudio(); // Initialize audio on user interaction
             startGame();
         } else if (gameState === 'playing') {
             flap();
@@ -332,7 +375,7 @@ window.addEventListener('keydown', (e) => {
 });
 
 gameContainer.addEventListener('click', () => {
-     if (gameState === 'playing') {
+    if (gameState === 'playing') {
         flap();
     }
 });
@@ -341,8 +384,3 @@ gameContainer.addEventListener('click', () => {
 resizeCanvas();
 init();
 gameLoop();
-
-
-
-
-
