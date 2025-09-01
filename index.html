@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Bird Adventure</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="game-container">
+        <canvas id="gameCanvas"></canvas>
+        <div class="ui-overlay">
+            <div class="game-info">
+                <div id="score">Score: 0</div>
+                <div id="level">Level: 1</div>
+            </div>
+
+            <div class="start-screen" id="startScreen">
+                <h1 class="title">Flappy Bird</h1>
+                <p class="subtitle">Click or Press Space to fly</p>
+                <button class="button" id="startButton">Start Game</button>
+            </div>
+
+            <div class="game-over-screen" id="gameOverScreen">
+                <h1 class="title">Game Over</h1>
+                <p class="final-score" id="finalScore"></p>
+                <p class="subtitle" id="highScoreText"></p>
+                <button class="button" id="restartButton">Restart</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

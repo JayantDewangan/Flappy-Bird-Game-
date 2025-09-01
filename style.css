@@ -1,0 +1,136 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+
+:root {
+    --bg-color: #87CEEB; /* Sky Blue */
+    --bg-gradient: #B0E0E6;
+    --pipe-color: #2E8B57; /* Sea Green */
+    --pipe-head-color: #228B22; /* Forest Green */
+    --bird-color: #FFD700; /* Gold */
+    --text-color: #FFFFFF;
+    --shadow-color: rgba(0, 0, 0, 0.2);
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    margin: 0;
+    background-color: #000;
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-color);
+    overflow: hidden; /* Prevent scrollbars */
+}
+
+.game-container {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background: var(--bg-color);
+    overflow: hidden;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.ui-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    pointer-events: none;
+}
+
+.game-info {
+    position: absolute;
+    top: 30px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    font-size: 1.8rem;
+    font-weight: 600;
+    text-shadow: 2px 2px 4px var(--shadow-color);
+}
+
+.start-screen, .game-over-screen {
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    pointer-events: all;
+}
+
+.game-over-screen {
+    display: none; /* Hidden by default */
+}
+
+.title {
+    font-size: 4rem;
+    font-weight: 800;
+    margin-bottom: 10px;
+    text-shadow: 3px 3px 6px var(--shadow-color);
+}
+
+.subtitle {
+    font-size: 1.4rem;
+    margin-bottom: 30px;
+}
+
+.button {
+    padding: 15px 30px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    background-color: var(--bird-color);
+    color: var(--pipe-head-color);
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 5px 15px var(--shadow-color);
+    text-transform: uppercase;
+}
+
+.button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px var(--shadow-color);
+}
+
+.final-score {
+    font-size: 2.5rem;
+    margin: 20px 0;
+}
+
+/* Responsive styles for smaller screens */
+@media (max-width: 768px) {
+    .title {
+        font-size: 3rem;
+    }
+    
+    .subtitle {
+        font-size: 1.2rem;
+    }
+
+    .game-info {
+        font-size: 1.5rem;
+    }
+
+    .final-score {
+        font-size: 2rem;
+    }
+}
+
